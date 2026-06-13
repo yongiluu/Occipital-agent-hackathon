@@ -9,6 +9,7 @@ import 'package:flutter/services.dart';
 import 'package:camera/camera.dart';
 
 import 'app.dart';
+import 'core/constants/env_config.dart';
 
 /// Global list of available cameras on the device.
 late List<CameraDescription> cameras;
@@ -16,6 +17,9 @@ late List<CameraDescription> cameras;
 Future<void> main() async {
   // Ensure Flutter bindings are initialized
   WidgetsFlutterBinding.ensureInitialized();
+  
+  // Load environment variables
+  await EnvConfig.init();
 
   // Force portrait orientation for consistent accessibility
   await SystemChrome.setPreferredOrientations([

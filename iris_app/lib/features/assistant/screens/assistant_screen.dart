@@ -13,7 +13,7 @@ import 'package:vibration/vibration.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../services/hardware/camera_service.dart';
-import '../../../services/ai/vision_service.dart';
+import '../../../services/ai/occipital_agent_service.dart';
 import '../../../services/ai/tts_service.dart';
 import '../../../services/hardware/haptic_service.dart';
 import '../../../services/ai/speech_service.dart';
@@ -29,7 +29,7 @@ class _AssistantScreenState extends State<AssistantScreen>
     with TickerProviderStateMixin {
   // ─── Services ───
   final CameraService _cameraService = CameraService();
-  final VisionService _visionService = VisionService();
+  final OccipitalAgentService _agentService = OccipitalAgentService();
   final TtsService _ttsService = TtsService();
   final HapticService _hapticService = HapticService();
   final SpeechService _speechService = SpeechService();
@@ -169,7 +169,13 @@ class _AssistantScreenState extends State<AssistantScreen>
     final Uint8List? imageBytes = await _cameraService.captureSingleFrame();
     if (imageBytes == null) return;
     
-    final String? desc = await _visionService.analyzeContinuousMode(imageBytes);
+    final String? desc = await _agentService.processWithAgenticReasoning(
+      imageBytes: imageBytes, 
+      userPrompt: "Describe the current view.",
+      onStatusUpdate: (status) {
+        if (mounted) setState(() => _statusText = status);
+      },
+    );
     if (desc != null && mounted) {
       setState(() {
         _lastDescription = desc.replaceAll(RegExp(r'^\[(en|es)\]\s*', caseSensitive: false), '');
@@ -185,7 +191,6 @@ class _AssistantScreenState extends State<AssistantScreen>
     if (_isListening || _isProcessing) return;
 
     if (_continuousMode) _continuousTimer?.cancel();
-    _visionService.contextManager.invalidate();
     await _ttsService.stop();
 
     try {
@@ -250,7 +255,13 @@ class _AssistantScreenState extends State<AssistantScreen>
     Uint8List? imageBytes = await _cameraService.captureSingleFrame();
     
     try {
-      final String? description = await _visionService.analyzeImage(imageBytes, prompt: prompt);
+      final String? description = await _agentService.processWithAgenticReasoning(
+        imageBytes: imageBytes!, 
+        userPrompt: prompt,
+        onStatusUpdate: (status) {
+          if (mounted) setState(() => _statusText = status);
+        },
+      );
       
       _resetState(null);
       setState(() {
@@ -301,7 +312,6 @@ class _AssistantScreenState extends State<AssistantScreen>
     _isAutoListening = true;
     
     if (_continuousMode) _continuousTimer?.cancel();
-    _visionService.contextManager.invalidate();
     await _ttsService.stop();
     
     try {
