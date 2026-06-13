@@ -23,24 +23,45 @@ This project follows **Clean Architecture** tailored for Flutter to ensure separ
 - **Physical Device**: A physical Android or iOS device is recommended to test Camera, Speech Recognition, and Haptics.
 
 ## Setup and Installation
+
+### Prerequisites: Environment Variables
+**Important:** This project requires API credentials for Azure Foundry, Azure AI Search, LocationIQ, and OpenWeatherMap. See [**ENV_SETUP.md**](./ENV_SETUP.md) for detailed instructions on obtaining and configuring credentials.
+
+### Quick Start
 1. Clone the repository:
    ```bash
    git clone <repository_url>
    ```
-2. Navigate to the app directory:
+2. Configure environment variables (see [ENV_SETUP.md](./ENV_SETUP.md)):
+   ```bash
+   cd iris_app
+   cp .env.template .env
+   # Edit .env with your API credentials
+   ```
+3. Navigate to the app directory:
    ```bash
    cd iris_app
    ```
-3. Install dependencies:
+4. Install dependencies:
    ```bash
    flutter pub get
    ```
-4. Run the application:
+5. Run the application:
    ```bash
    flutter run
    ```
 
-## Contribution Guidelines
+For detailed environment setup instructions, please refer to [**ENV_SETUP.md**](./ENV_SETUP.md).
+
+## Security & Environment Variables
+
+⚠️ **IMPORTANT SECURITY NOTICE:**
+- The `.env` file is **NEVER** committed to version control and must be configured locally
+- API credentials should be stored in `.env` file only (which is listed in `.gitignore`)
+- Never hardcode sensitive information in source code
+- Follow the [ENV_SETUP.md](./ENV_SETUP.md) guide for secure credential management
+
+For complete security best practices and troubleshooting, see [ENV_SETUP.md](./ENV_SETUP.md#security-best-practices).
 This project is part of the Microsoft Agents League Hackathon. Please ensure all code adheres to Clean Architecture patterns and is properly translated to English before opening a PR.
 
 ## License
