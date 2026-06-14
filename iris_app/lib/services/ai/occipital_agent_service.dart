@@ -8,6 +8,7 @@ import 'dart:convert';
 import 'dart:typed_data';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
+import 'package:geolocator/geolocator.dart';
 import '../../core/constants/env_config.dart';
 
 enum OccipitalLayer { macro, micro, critical }
@@ -77,10 +78,35 @@ You are Occipital, an advanced, highly reliable visual and reasoning assistant f
     String locationText = 'Unknown location';
     String weatherText = 'Unknown weather';
 
+    double lat = mockLat;
+    double lon = mockLon;
+
+    try {
+      bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      if (serviceEnabled) {
+        LocationPermission permission = await Geolocator.checkPermission();
+        if (permission == LocationPermission.denied) {
+          permission = await Geolocator.requestPermission();
+        }
+        
+        if (permission == LocationPermission.whileInUse || permission == LocationPermission.always) {
+          Position position = await Geolocator.getCurrentPosition();
+          lat = position.latitude;
+          lon = position.longitude;
+        } else {
+          debugPrint('⚠️ OccipitalAgentService: Location permissions denied, falling back to mock coordinates.');
+        }
+      } else {
+        debugPrint('⚠️ OccipitalAgentService: Location services disabled, falling back to mock coordinates.');
+      }
+    } catch (e) {
+      debugPrint('⚠️ OccipitalAgentService: Error getting location (\$e), falling back to mock coordinates.');
+    }
+
     try {
       // 1. LocationIQ
       if (EnvConfig.locationIqKey.isNotEmpty) {
-        final locUrl = Uri.parse('https://us1.locationiq.com/v1/reverse?key=${EnvConfig.locationIqKey}&lat=$mockLat&lon=$mockLon&format=json');
+        final locUrl = Uri.parse('https://us1.locationiq.com/v1/reverse?key=${EnvConfig.locationIqKey}&lat=$lat&lon=$lon&format=json');
         final locRes = await http.get(locUrl);
         if (locRes.statusCode == 200) {
           final data = jsonDecode(locRes.body);
@@ -93,7 +119,7 @@ You are Occipital, an advanced, highly reliable visual and reasoning assistant f
 
       // 2. OpenWeatherMap
       if (EnvConfig.openWeatherKey.isNotEmpty) {
-        final weatherUrl = Uri.parse('https://api.openweathermap.org/data/2.5/weather?lat=$mockLat&lon=$mockLon&appid=${EnvConfig.openWeatherKey}&units=metric');
+        final weatherUrl = Uri.parse('https://api.openweathermap.org/data/2.5/weather?lat=$lat&lon=$lon&appid=${EnvConfig.openWeatherKey}&units=metric');
         final weatherRes = await http.get(weatherUrl);
         if (weatherRes.statusCode == 200) {
           final data = jsonDecode(weatherRes.body);
